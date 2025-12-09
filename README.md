@@ -13,6 +13,7 @@ Manually create this file and paste the function definitions from your source.
 ```bash
 MAIN_REPO="/Users/your-username/path/to/your/repo"
 WORKTREE_BASE="/Users/your-username/path/to/repo-worktrees"
+ITERM_PROFILE="Default"  # Your iTerm profile name
 ```
 
 3. **Add to your `~/.zshrc`:**
@@ -98,16 +99,17 @@ delete-feature JIRA-456-user-profile
 
 ## Configuration
 
-The functions use two main variables:
+The functions use three main variables:
 
 - **`MAIN_REPO`** - Absolute path to your main git repository
 - **`WORKTREE_BASE`** - Directory where worktrees will be created
+- **`ITERM_PROFILE`** - iTerm2 profile name to use for new tabs (default: "Default")
 
 Worktrees are created at: `$WORKTREE_BASE/<branch-name>/`
 
 ## Requirements
 
 - macOS (uses AppleScript for terminal tab management)
-- iTerm2 or Terminal.app
-- GitHub Copilot CLI (`copilot` command)
+- iTerm2 (required)
+- Copilot CLI (`copilot` command)
 - zsh shell
