@@ -111,5 +111,5 @@ Worktrees are created at: `$WORKTREE_BASE/<branch-name>/`
 
 - macOS (uses AppleScript for terminal tab management)
 - iTerm2 (required)
-- Copilot CLI (`copilot` command)
+- GitHub Copilot CLI (`copilot` command)
 - zsh shell
