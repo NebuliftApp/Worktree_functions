@@ -4,7 +4,7 @@
 
 MAIN_REPO="/Users/danielsims/Desktop/Dev/ai-tech-approver"
 WORKTREE_BASE="/Users/danielsims/Desktop/Dev/ai-tech-approver-worktrees"
-ITERM_PROFILE="Default"  # Change to your preferred iTerm profile name
+ITERM_PROFILE="Copilot - Android"  # iTerm profile with copilot command configured
 
 start-feature() {
     if [ -z "$1" ]; then
@@ -39,13 +39,13 @@ start-feature() {
     echo "✓ Worktree created at: $worktree_path"
     echo "✓ Opening new iTerm tab..."
 
-    # Open new iTerm tab
+    # Open new iTerm tab with Copilot profile
     osascript <<EOF
 tell application "iTerm"
     tell current window
         create tab with profile "$ITERM_PROFILE"
         tell current session
-            write text "echo -ne '\\\\033]0;$branch_name\\\\007' && cd '$worktree_path' && copilot --allow-all-tools"
+            write text "echo -ne '\\\\033]0;$branch_name\\\\007' && cd '$worktree_path'"
         end tell
     end tell
 end tell
