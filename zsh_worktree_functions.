@@ -1,0 +1,196 @@
+@@ -0,0 +1,195 @@
+#!/bin/zsh
+# Git Worktree Management Functions for ai-tech-approver
+# Source this file in your ~/.zshrc
+
+MAIN_REPO="/Users/danielsims/Desktop/Dev/ai-tech-approver"
+WORKTREE_BASE="/Users/danielsims/Desktop/Dev/ai-tech-approver-worktrees"
+
+start-feature() {
+    if [ -z "$1" ]; then
+        echo "Usage: start-feature <branch-name>"
+        return 1
+    fi
+    
+    local branch_name="$1"
+    local worktree_path="$WORKTREE_BASE/$branch_name"
+    
+    # Check if we're in the main repo
+    if [ "$PWD" != "$MAIN_REPO" ]; then
+        cd "$MAIN_REPO" || return 1
+    fi
+    
+    # Create worktree from master
+    echo "Creating worktree for branch: $branch_name"
+    git worktree add -b "$branch_name" "$worktree_path" master || return 1
+    
+    # Copy git-ignored files
+    echo "Copying git-ignored files..."
+    if [ -d "$MAIN_REPO/.github" ]; then
+        cp -r "$MAIN_REPO/.github" "$worktree_path/"
+    fi
+    if [ -d "$MAIN_REPO/.idea" ]; then
+        cp -r "$MAIN_REPO/.idea" "$worktree_path/"
+    fi
+    if [ -d "$MAIN_REPO/.vscode" ]; then
+        cp -r "$MAIN_REPO/.vscode" "$worktree_path/"
+    fi
+    
+    echo "✓ Worktree created at: $worktree_path"
+    echo "✓ Opening new terminal tab..."
+    
+    # Detect terminal and open new tab
+    if [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
+        # iTerm2
+        osascript <<EOF
+tell application "iTerm"
+    tell current window
+        create tab with default profile
+        tell current session
+            write text "echo -ne '\\\\033]0;$branch_name\\\\007' && cd '$worktree_path' && copilot --allow-all-tools"
+        end tell
+    end tell
+end tell
+EOF
+    elif [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
+        # macOS Terminal
+        osascript <<EOF
+tell application "Terminal"
+    tell application "System Events" to keystroke "t" using command down
+    delay 0.5
+    do script "cd '$worktree_path' && copilot --allow-all-tools" in selected tab of front window
+end tell
+EOF
+    else
+        # Fallback: try generic Terminal approach
+        osascript <<EOF
+tell application "Terminal"
+    do script "cd '$worktree_path' && copilot --allow-all-tools"
+    activate
+end tell
+EOF
+    fi
+    
+    echo "✓ Copilot started in new terminal tab"
+}
+
+rebase-feature() {
+    if [ -z "$1" ]; then
+        echo "Usage: rebase-feature <branch-name>"
+        return 1
+    fi
+    
+    local branch_name="$1"
+    local worktree_path="$WORKTREE_BASE/$branch_name"
+    
+    if [ ! -d "$worktree_path" ]; then
+        echo "Error: Worktree not found at $worktree_path"
+        return 1
+    fi
+    
+    cd "$worktree_path" || return 1
+    
+    echo "Fetching latest master..."
+    git fetch origin master:master || return 1
+    
+    echo "Rebasing $branch_name onto master..."
+    git rebase master || {
+        echo "Rebase failed. Fix conflicts and run: git rebase --continue"
+        return 1
+    }
+    
+    echo "✓ Rebased $branch_name onto master"
+}
+
+push-feature() {
+    if [ -z "$1" ]; then
+        echo "Usage: push-feature <branch-name>"
+        return 1
+    fi
+    
+    local branch_name="$1"
+    local worktree_path="$WORKTREE_BASE/$branch_name"
+    
+    if [ ! -d "$worktree_path" ]; then
+        echo "Error: Worktree not found at $worktree_path"
+        return 1
+    fi
+    
+    cd "$worktree_path" || return 1
+    
+    echo "Pushing $branch_name to origin..."
+    git push -u origin "$branch_name" || return 1
+    
+    echo "✓ Pushed $branch_name to origin"
+}
+
+delete-feature() {
+    if [ -z "$1" ]; then
+        echo "Usage: delete-feature <branch-name>"
+        return 1
+    fi
+    
+    local branch_name="$1"
+    local worktree_path="$WORKTREE_BASE/$branch_name"
+    
+    # Check if worktree exists
+    if [ ! -d "$worktree_path" ]; then
+        echo "Error: Worktree not found at $worktree_path"
+        return 1
+    fi
+    
+    # Confirm deletion
+    echo "This will delete:"
+    echo "  - Worktree: $worktree_path"
+    echo "  - Local branch: $branch_name"
+    echo -n "Continue? (y/N): "
+    read confirm
+    
+    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+        echo "Cancelled"
+        return 0
+    fi
+    
+    # Remove worktree and branch
+    cd "$MAIN_REPO" || return 1
+    git worktree remove "$worktree_path" --force || return 1
+    git branch -D "$branch_name" 2>/dev/null
+    
+    echo "✓ Cleaned up worktree and branch: $branch_name"
+}
+
+# Alias for backwards compatibility
+finish-feature() {
+    delete-feature "$@"
+}
+
+list-features() {
+    echo "Git Worktrees for ai-tech-approver:"
+    echo ""
+    
+    cd "$MAIN_REPO" || return 1
+    git worktree list
+}
+
+show-worktree-functions() {
+    echo "Git Worktree Helper Commands"
+    echo "=============================="
+    echo ""
+    echo "start-feature <branch-name>"
+    echo "  Create a new worktree from master, copy ignored files, and launch copilot in a new tab"
+    echo ""
+    echo "rebase-feature <branch-name>"
+    echo "  Rebase the specified worktree branch onto master"
+    echo ""
+    echo "push-feature <branch-name>"
+    echo "  Push the specified branch to origin with upstream tracking"
+    echo ""
+    echo "delete-feature <branch-name>"
+    echo "  Delete the worktree and local branch (with confirmation)"
+    echo ""
+    echo "list-features"
+    echo "  Show all git worktrees for ai-tech-approver"
+    echo ""
+    echo "show-worktree-functions"
+    echo "  Display this help message"
+}
