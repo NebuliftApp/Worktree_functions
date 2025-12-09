@@ -139,11 +139,6 @@ delete-feature() {
     echo "✓ Cleaned up worktree and branch: $branch_name"
 }
 
-# Alias for backwards compatibility
-finish-feature() {
-    delete-feature "$@"
-}
-
 list-features() {
     echo "Git Worktrees for ai-tech-approver:"
     echo ""
